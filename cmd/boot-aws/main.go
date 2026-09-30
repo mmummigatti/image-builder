@@ -49,16 +49,6 @@ type resources struct {
 	InstanceID    *string `json:"instance,omitempty"`
 }
 
-func getInstanceType(arch string) (string, error) {
-	switch arch {
-	case "x86_64":
-		return "t3.small", nil
-	case "aarch64":
-		return "t4g.medium", nil
-	default:
-		return "", fmt.Errorf("getInstanceType(): unknown architecture %q", arch)
-	}
-}
 
 func newClientFromArgs(flags *pflag.FlagSet) (*awscloud.AWS, error) {
 	region, err := flags.GetString("region")
@@ -105,7 +95,7 @@ func doSetup(a *awscloud.AWS, flags *pflag.FlagSet, res *resources) error {
 		return err
 	}
 
-	archArg, err := flags.GetString("arch")
+	instanceType, err := flags.GetString("instance-type")
 	if err != nil {
 		return err
 	}
@@ -125,11 +115,7 @@ func doSetup(a *awscloud.AWS, flags *pflag.FlagSet, res *resources) error {
 		return fmt.Errorf("AuthorizeSecurityGroupIngressEC2(): %s", err.Error())
 	}
 
-	instance, err := getInstanceType(archArg)
-	if err != nil {
-		return err
-	}
-	runResult, err := a.RunInstanceEC2(ami, *securityGroup.GroupId, userData, instance)
+	runResult, err := a.RunInstanceEC2(ami, *securityGroup.GroupId, userData, instanceType)
 	if err != nil {
 		return fmt.Errorf("RunInstanceEC2(): %s", err.Error())
 	}
@@ -362,14 +348,14 @@ func setupCLI() *cobra.Command {
 	rootFlags.String("session-token", "", "session token")
 	rootFlags.String("region", "", "target region")
 	rootFlags.String("ami", "", "AMI ID to boot")
-	rootFlags.String("arch", "", "arch (x86_64 or aarch64)")
+	rootFlags.String("instance-type", "", "EC2 instance type")
 	rootFlags.String("username", "", "name of the user to create on the system")
 	rootFlags.String("ssh-pubkey", "", "path to user's public ssh key")
 	rootFlags.String("ssh-privkey", "", "path to user's private ssh key")
 
 	exitCheck(rootCmd.MarkPersistentFlagRequired("region"))
 	exitCheck(rootCmd.MarkPersistentFlagRequired("ami"))
-	exitCheck(rootCmd.MarkPersistentFlagRequired("arch"))
+	exitCheck(rootCmd.MarkPersistentFlagRequired("instance-type"))
 
 	// TODO: make it optional and use a default
 	exitCheck(rootCmd.MarkPersistentFlagRequired("username"))

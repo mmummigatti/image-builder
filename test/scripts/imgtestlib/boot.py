@@ -36,7 +36,8 @@ def get_aws_config():
         "key_id": os.environ.get("AWS_ACCESS_KEY_ID"),
         "secret_key": os.environ.get("AWS_SECRET_ACCESS_KEY"),
         "bucket": os.environ.get("AWS_BUCKET"),
-        "region": os.environ.get("AWS_REGION")
+        "region": os.environ.get("AWS_REGION"),
+        "instance_type": os.environ.get("AWS_INSTANCE_TYPE"),
     }
     ensure_env_vars(env_vars)
     return env_vars
@@ -472,8 +473,8 @@ def cmd_boot_aws(distro, arch, image_type, image_name, privkey, pubkey, image_pa
            "--access-key-id", aws_config["key_id"],
            "--secret-access-key", aws_config["secret_key"],
            "--region", aws_config["region"],
-           "--arch", arch,
            "--ami", ami_id,
+           "--instance-type", aws_config["instance_type"],
            "--username", "osbuild",
            "--ssh-privkey", privkey,
            "--ssh-pubkey", pubkey,
